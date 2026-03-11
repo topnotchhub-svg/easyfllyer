@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "63894906325",
+    "project_id": "easyfllyer",
+    "storage_bucket": "easyfllyer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63894906325:android:bb8f1db390308f83cf895c",
+        "android_client_info": {
+          "package_name": "com.jspromotionalatestversion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv81BeMaiElgxlC4zO5Tgw0RQ55-npuoo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

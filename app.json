@@ -1,0 +1,35 @@
+
+{
+  "name": "easy-flyer",
+  "displayName": "Easy Flyer",
+  "expo": {
+    "name": "Easy Flyer",
+    "slug": "jspromotionalatestversion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jspromotionalatestversion"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.jspromotionalatestversion"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
