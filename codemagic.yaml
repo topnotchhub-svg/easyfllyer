@@ -14,5 +14,5 @@ workflows:
       - build/ios/ipa/*.ipa
     publishing:
       app_store_connect:
-        api_key: 6fYVt-dNqOfStKdBUbdQXETd1Wo2M7-9S2RaFumX3kQ
+        api_key: $APP_STORE_CONNECT_KEY
         submit_to_testflight: true
