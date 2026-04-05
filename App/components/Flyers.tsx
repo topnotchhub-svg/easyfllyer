@@ -1,34 +1,51 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {
-  View,
-  FlatList,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
+// app/components/Flyers.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, FlatList, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import FlyerItem from '../../utils/FlyerItem';
-import {
-  fetchFlyersByPostalCodeWithBrandImage,
-  Flyer,
-} from '../../actions/flyer/fetch-flyer';
-import {toggleBrandFlyer} from '../../store/slices/brandSlice';
-import {RootState} from '../../store/store';
+import { fetchFlyersByPostalCodeWithBrandImage, Flyer } from '../../actions/flyer/fetch-flyer';
+import { toggleBrandFlyer, setBrandFlyers } from '../../store/slices/brandSlice';
+import { RootState } from '../../store/store';
+import { 
+  addFavoriteToFirebase, 
+  removeFavoriteFromFirebase, 
+  getUserFavorites 
+} from '../../lib/favoritesService';
 
-const FlyersComponent = ({userData, mediaLink, navigation}: any) => {
+const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove mediaLink from here
   const dispatch = useDispatch();
-
-  // Select brandFlyers from Redux state
   const brandFlyers = useSelector((state: RootState) => state.brandFlyers);
   const selectedCategories = useSelector(
     (state: RootState) => state.categories,
   );
-  //console.log('🚀 ~ FlyersComponent ~ selectedCategories:', selectedCategories);
-
+  
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
-  // Fetch flyers from Firestore
+  // Load favorites from Firebase on component mount
+  useEffect(() => {
+    const loadFavoritesFromFirebase = async () => {
+      if (!userData?.userId) {
+        console.log('No user ID available yet');
+        return;
+      }
+      
+      setSyncing(true);
+      try {
+        const firebaseFavorites = await getUserFavorites(userData.userId);
+        dispatch(setBrandFlyers(firebaseFavorites));
+        console.log(`✅ Loaded ${firebaseFavorites.length} favorites from Firebase`);
+      } catch (error) {
+        console.error('Error loading favorites from Firebase:', error);
+      } finally {
+        setSyncing(false);
+      }
+    };
+    
+    loadFavoritesFromFirebase();
+  }, [userData?.userId, dispatch]);
+
   const fetchFlyers = useCallback(async () => {
     setLoading(true);
     try {
@@ -36,7 +53,6 @@ const FlyersComponent = ({userData, mediaLink, navigation}: any) => {
         userData?.postalCode,
         selectedCategories,
       );
-      // console.log('Fetched Flyers:', allFlyers);
       setFlyers(allFlyers);
     } catch (error) {
       console.error('Error fetching flyers:', error);
@@ -49,30 +65,62 @@ const FlyersComponent = ({userData, mediaLink, navigation}: any) => {
     fetchFlyers();
   }, [fetchFlyers]);
 
-  // Toggle favorite flyer using Redux
   const toggleFavorite = useCallback(
-    (flyer: Flyer) => {
+    async (flyer: Flyer) => {
       if (!flyer || !flyer.id || !flyer.title) {
         console.error('Invalid flyer:', flyer);
         return;
       }
-      const flyerData = {id: flyer.id, name: flyer.title};
-      console.log('🚀 Toggling Favorite Flyer:', flyerData);
+      
+      const flyerData = {
+        id: flyer.id,
+        name: flyer.title,
+        type: 'flyer',
+        image: flyer.image || '',
+      };
+      
+      const isCurrentlyFavorite = brandFlyers.some((f: any) => f.id === flyer.id);
+      
+      // Update Redux immediately for UI feedback
       dispatch(toggleBrandFlyer(flyerData));
+      
+      // Sync with Firebase
+      try {
+        if (isCurrentlyFavorite) {
+          const success = await removeFavoriteFromFirebase(userData?.userId, flyerData);
+          if (!success) {
+            console.error('Failed to remove from Firebase, reverting...');
+            dispatch(toggleBrandFlyer(flyerData)); 
+          } else {
+            console.log('✅ Removed favorite from Firebase:', flyer.title);
+          }
+        } else {
+          const success = await addFavoriteToFirebase(
+            userData?.userId,
+            flyerData,
+            userData?.fcmToken || '',
+          );
+          if (!success) {
+            console.error('Failed to save to Firebase, reverting...');
+            dispatch(toggleBrandFlyer(flyerData)); 
+          } else {
+            console.log('✅ Saved favorite to Firebase:', flyer.title);
+          }
+        }
+      } catch (error) {
+        console.error('Firebase sync error:', error);
+        dispatch(toggleBrandFlyer(flyerData));
+      }
     },
-    [dispatch],
+    [dispatch, brandFlyers, userData],
   );
 
-  // Render flyer item
-  const renderFlyer = ({item}: {item: Flyer}) => {
+  const renderFlyer = ({ item }: { item: Flyer }) => {
     const isFavorite = brandFlyers.some((flyer: any) => flyer.id === item.id);
-    // console.log(`Flyer ${item.id} isFavorite:`, isFavorite);
-
+  
     return (
       <FlyerItem
         item={item}
-        // @ts-expect-error ignore
-        mediaLink={mediaLink}
         navigation={navigation}
         isFavorite={isFavorite}
         toggleFavorite={() => toggleFavorite(item)}
@@ -80,10 +128,11 @@ const FlyersComponent = ({userData, mediaLink, navigation}: any) => {
     );
   };
 
-  if (loading) {
+  if (loading || syncing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#4C6EF5" />
+        {syncing && <Text style={styles.syncingText}>Syncing favorites...</Text>}
       </View>
     );
   }
@@ -121,6 +170,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  syncingText: {
+    marginTop: 10,
+    fontSize: 12,
+    color: '#666',
   },
   noFlyersContainer: {
     flex: 1,

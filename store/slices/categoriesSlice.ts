@@ -13,10 +13,8 @@ const categoriesSlice = createSlice({
       const index = state.findIndex((item: any) => item.name === categoryName);
 
       if (index !== -1) {
-        // Remove category if it exists (unselect)
         state.splice(index, 1);
       } else {
-        // Add category if it doesn't exist (select)
         state.push({name: categoryName});
       }
     },

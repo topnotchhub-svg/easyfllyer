@@ -1,16 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useContext, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  StatusBar,
-} from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { View, StyleSheet, TouchableOpacity, Text, StatusBar, } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets, } from 'react-native-safe-area-context';
 import { useToast } from 'react-native-toast-notifications';
 import { AuthContext } from '../../../lib/AuthContext';
 import FlyersComponent from '../../components/Flyers';
@@ -42,22 +33,15 @@ const ExploreScreen = ({ navigation }: any) => {
         return;
       }
       const result = await deleteUser(userData.postalCode, userData.userId);
-      if (result.success) {
-        toast.show('Account and postal code deleted successfully!', {
-          type: 'success',
-        });
+      if (result.success) { toast.show('Account and postal code deleted successfully!', { type: 'success', });
         logout();
         navigation.reset({ index: 0, routes: [{ name: 'signUp' }] });
       } else {
-        toast.show(result.message || 'Failed to delete account.', {
-          type: 'danger',
-        });
+        toast.show(result.message || 'Failed to delete account.', { type: 'danger', });
       }
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.show('An error occurred while deleting the account.', {
-        type: 'danger',
-      });
+      toast.show('An error occurred while deleting the account.', { type: 'danger', });
     }
   };
 
@@ -65,11 +49,7 @@ const ExploreScreen = ({ navigation }: any) => {
     switch (activeTab) {
       case 0:
         return activeSubTab === 0 ? (
-          <FlyersComponent
-            userData={userData}
-            mediaLink="https://tinynote.in/ofo/public/assests/baseimg/"
-            navigation={navigation}
-          />
+          <FlyersComponent userData={userData} mediaLink="https://tinynote.in/ofo/public/assests/baseimg/" navigation={navigation} />
         ) : (
           <StoreFlyersComponent userData={userData} navigation={navigation} />
         );

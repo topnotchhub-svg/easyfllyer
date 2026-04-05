@@ -1,85 +1,46 @@
 import React, {useContext, useState} from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useToast} from 'react-native-toast-notifications';
 import {AuthContext} from '../../../lib/AuthContext';
 import {editPostalCode} from '../../../actions/postal-code/edit-code';
 
 const UpdatePostalCodeScreen = ({navigation}: any) => {
-  const [postalCode, setPostalCode] = useState(''); // Local state for new postal code input
-  const [loading, setLoading] = useState(false); // Loading state
+  const [postalCode, setPostalCode] = useState(''); 
+  const [loading, setLoading] = useState(false); 
   const toast = useToast();
 
   const {
     updateUserData,
     postalCode: globalPostalCode,
     userData,
-  } = useContext(AuthContext); // Access global postal code and updater
+  } = useContext(AuthContext); 
 
   const handleUpdatePostalCode = async () => {
     if (!postalCode.trim()) {
-      toast.show('Postal Code is required!', {
-        type: 'danger',
-        placement: 'top',
-        duration: 3000,
-        animationType: 'slide-in',
-      });
+      toast.show('Postal Code is required!', { type: 'danger', placement: 'top', duration: 3000, animationType: 'slide-in', });
       return;
     }
 
     try {
       setLoading(true);
-
-      // Call the editPostalCode action
-      const result = await editPostalCode(
-        globalPostalCode,
-        postalCode,
-        userData.userId,
-      ); // Replace with the actual userId
-
+      const result = await editPostalCode( globalPostalCode, postalCode, userData.userId, ); 
       if (result.success) {
         const {oldPostalCode, newPostalCode, userId, fcmToken} = result;
-
-        // Update the global postal code in the context
         updateUserData({postalCode: newPostalCode, userId, fcmToken});
-
-        toast.show(
-          `Postal Code updated successfully from '${oldPostalCode}' to '${newPostalCode}'!`,
-          {
-            type: 'success',
-            placement: 'top',
-            duration: 3000,
-            animationType: 'slide-in',
-          },
+        toast.show( `Postal Code updated successfully from '${oldPostalCode}' to '${newPostalCode}'!`, {
+            type: 'success', placement: 'top', duration: 3000, animationType: 'slide-in', },
         );
 
-        // Navigate back to the previous screen
         navigation.goBack();
       } else {
         toast.show(result.message || 'Failed to update postal code.', {
-          type: 'danger',
-          placement: 'top',
-          duration: 3000,
-          animationType: 'slide-in',
+          type: 'danger', placement: 'top', duration: 3000, animationType: 'slide-in',
         });
       }
     } catch (error) {
       console.error('Error updating postal code:', error);
-      toast.show('An error occurred. Please try again later.', {
-        type: 'danger',
-        placement: 'top',
-        duration: 3000,
-        animationType: 'slide-in',
-      });
+      toast.show('An error occurred. Please try again later.', { type: 'danger', placement: 'top', duration: 3000, animationType: 'slide-in', });
     } finally {
       setLoading(false);
     }
@@ -88,43 +49,15 @@ const UpdatePostalCodeScreen = ({navigation}: any) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* Back Button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={28} color="#000000" />
-      </TouchableOpacity>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}> <Icon name="arrow-back" size={28} color="#000000" /> </TouchableOpacity>
 
-      {/* Profile Icon */}
-      <View style={styles.profileIconContainer}>
-        <Text style={styles.profileIconText}>📮</Text>
-      </View>
-
-      {/* Title */}
+      <View style={styles.profileIconContainer}> <Text style={styles.profileIconText}>📮</Text> </View>
       <Text style={styles.title}>Update Postal Code</Text>
+      <TextInput style={styles.input} placeholder={'Enter your New Postal Code'} placeholderTextColor="#888" value={postalCode} onChangeText={setPostalCode}
+        keyboardType="default" autoCapitalize="none" autoCorrect={false} accessibilityLabel="Postal Code Input" />
+      <Text style={styles.currentPostalCode}> Current Postal Code: {globalPostalCode || 'Not Set'} </Text>
 
-      {/* Input Field */}
-      <TextInput
-        style={styles.input}
-        placeholder={'Enter your New Postal Code'}
-        placeholderTextColor="#888"
-        value={postalCode}
-        onChangeText={setPostalCode}
-        keyboardType="default"
-        autoCapitalize="none"
-        autoCorrect={false}
-        accessibilityLabel="Postal Code Input"
-      />
-
-      {/* Current Postal Code Display */}
-      <Text style={styles.currentPostalCode}>
-        Current Postal Code: {globalPostalCode || 'Not Set'}
-      </Text>
-
-      {/* Update Button */}
-      <TouchableOpacity
-        onPress={handleUpdatePostalCode}
-        style={[styles.updateButton, loading && styles.disabledButton]}
+      <TouchableOpacity onPress={handleUpdatePostalCode} style={[styles.updateButton, loading && styles.disabledButton]}
         disabled={loading}>
         {loading ? (
           <ActivityIndicator size="small" color="#FFFFFF" />

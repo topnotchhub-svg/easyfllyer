@@ -1,80 +1,61 @@
-// ///////////////////////////////////////////////////////////////////
-
-// import {collection, getDocs, query, where} from 'firebase/firestore';
-// import {db} from '../../lib/firebase';
-
-// export interface Brand {
-//   id: string;
-//   name: string;
-//   email: string;
-//   password?: string;
-//   description: string;
-//   image: string | null;
-//   adminId: string;
-//   postalCode: string;
-// }
-
-// export async function fetchBrandsByPostalCode(
-//   postalCode: string,
-// ): Promise<{success: boolean; message: string; brands?: Brand[]}> {
-//   try {
-//     // Validate the input
-//     if (!postalCode) {
-//       return {
-//         success: false,
-//         message: 'Postal code is required to fetch brands.',
-//       };
-//     }
-
-//     // Reference the "brands" collection with a postal code filter
-//     const brandsCollection = collection(db, 'brands');
-//     const brandsQuery = query(
-//       brandsCollection,
-//       where('postalCode', '==', postalCode),
-//     );
-
-//     // Execute the query
-//     const querySnapshot = await getDocs(brandsQuery);
-
-//     // Map the documents into an array of brands
-//     const brands = querySnapshot.docs.map(doc => ({
-//       id: doc.id,
-//       ...doc.data(),
-//     })) as Brand[];
-
-//     return {
-//       success: true,
-//       message: 'Brands fetched successfully.',
-//       brands,
-//     };
-//   } catch (error) {
-//     console.error('Error fetching brands by postal code:', error);
-//     return {
-//       success: false,
-//       message: 'An error occurred while fetching brands.',
-//     };
-//   }
-// }
-
-import {collection, getDocs, query, where} from 'firebase/firestore';
-import {db} from '../../lib/firebase';
+// actions/brand/fetch-brands.ts
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 export interface Entity {
   id: string;
   name: string;
-  type: 'brand' | 'store'; // Distinguish between brands and stores
+  type: 'brand' | 'store';
   postalCode: string;
-  description?: string; // For brands
-  image?: string | null; // For brands and stores
-  address?: string; // For stores
-  brandId?: string; // For stores
+  description?: string;
+  image?: string | null;
+  address?: string;
+  brandId?: string;
+  email?: string; // Add email for brands
 }
+
+export interface Brand {
+  id: string;
+  name: string;
+  description: string;
+  email: string;
+  image: string;
+  postalCode: string;
+  createdAt?: string;
+  active?: boolean; // Add active status
+}
+
+export const fetchAllBrands = async (): Promise<Brand[]> => {
+  try {
+    const brandsCollection = collection(db, 'brands');
+    const querySnapshot = await getDocs(brandsCollection);
+    
+    const brands = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name || '',
+      description: doc.data().description || '',
+      email: doc.data().email || '',
+      image: doc.data().compressedImage || doc.data().image || '',
+      postalCode: doc.data().postalCode || '',
+      createdAt: doc.data().createdAt || '',
+      active: doc.data().active ?? true, // Add active status
+    })) as Brand[];
+    
+    // Optional: Sort by name
+    brands.sort((a, b) => a.name.localeCompare(b.name));
+    
+    console.log(`✅ Fetched ${brands.length} brands`);
+    return brands;
+  } catch (error) {
+    console.error('Error fetching brands:', error);
+    return [];
+  }
+};
 
 export async function fetchEntitiesByPostalCode(
   postalCode: string,
-): Promise<{success: boolean; message: string; entities?: Entity[]}> {
+): Promise<{ success: boolean; message: string; entities?: Entity[] }> {
   try {
-    // Validate the input
     if (!postalCode) {
       return {
         success: false,
@@ -87,16 +68,18 @@ export async function fetchEntitiesByPostalCode(
     const brandsQuery = query(
       brandsCollection,
       where('postalCode', '==', postalCode),
+      where('active', '==', true) // Only fetch active brands
     );
     const brandsSnapshot = await getDocs(brandsQuery);
 
     const brands = brandsSnapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().name,
-      type: 'brand', // Mark as a brand
+      type: 'brand' as const,
       postalCode: doc.data().postalCode,
       description: doc.data().description,
-      image: doc.data().image || null,
+      image: doc.data().compressedImage || doc.data().image || null,
+      email: doc.data().email,
     })) as Entity[];
 
     // Fetch stores
@@ -104,21 +87,26 @@ export async function fetchEntitiesByPostalCode(
     const storesQuery = query(
       storesCollection,
       where('postalCode', '==', postalCode),
+      where('active', '==', true) // Only fetch active stores
     );
     const storesSnapshot = await getDocs(storesQuery);
 
     const stores = storesSnapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().name,
-      type: 'store', // Mark as a store
+      type: 'store' as const,
       postalCode: doc.data().postalCode,
       address: doc.data().address,
       brandId: doc.data().brandId,
       image: doc.data().image || null,
     })) as Entity[];
 
-    // Combine brands and stores into a single array
     const entities = [...brands, ...stores];
+    
+    // Sort entities by name
+    entities.sort((a, b) => a.name.localeCompare(b.name));
+
+    console.log(`✅ Fetched ${entities.length} entities (${brands.length} brands, ${stores.length} stores) for postal code: ${postalCode}`);
 
     return {
       success: true,

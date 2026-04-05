@@ -18,49 +18,23 @@ const FlyerItem = ({ item, navigation, toggleFavorite, isFavorite }) => {
 
   return (
     <View style={styles.flyerCard}>
-      {/* Heart Icon for Favorite */}
-      <TouchableOpacity
-        style={styles.heartIcon}
-        onPress={() => toggleFavorite(item)}
-      >
-        <Icon
-          name={isFavorite ? 'heart' : 'heart-o'}
-          size={22}
-          color={isFavorite ? '#FF0000' : '#888'}
-        />
+      <TouchableOpacity style={styles.heartIcon} onPress={() => toggleFavorite(item)} >
+        <Icon name={isFavorite ? 'heart' : 'heart-o'} size={22} color={isFavorite ? '#FF0000' : '#888'} />
       </TouchableOpacity>
 
-      {/* Flyer Content */}
       <TouchableOpacity onPress={navigateToFlyerScreen} activeOpacity={0.9}>
-        <Image
-          source={{ uri: item.image }}
-          style={styles.flyerImage}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item.image }} style={styles.flyerImage} resizeMode="cover" />
         <View style={styles.flyerDetails}>
-          {/* Brand Image and Flyer Title */}
           <View style={styles.brandWithTitleContainer}>
             {item.brandImage && (
-              <Image
-                source={{ uri: item.brandImage }}
-                style={styles.brandImage}
-                resizeMode="contain"
-              />
+              <Image source={{ uri: item.brandImage }} style={styles.brandImage} resizeMode="contain" />
             )}
             <View style={styles.textInfo}>
-            <Text style={styles.flyerTitle}>{item.title}</Text>
-             <Text style={styles.flyerDescription}>{item.description}</Text>
-             <Text style={styles.flyerValidity}>
-            Until : {formatDate(item.validTo)}
-          </Text>
-          {/* Valid From: {formatDate(item.validFrom)}  */}
+              <Text style={styles.flyerTitle}> {item.title} </Text>
+              <Text style={styles.flyerDescription}> {item.description} </Text>
+              <Text style={styles.flyerValidity}> Until : {formatDate(item.validTo)} </Text>
             </View>
           </View>
-
-          {/* Flyer Description */}
-          {/* <Text style={styles.flyerValidity}>
-            Valid From: {formatDate(item.validFrom)} To: {formatDate(item.validTo)}
-          </Text> */}
         </View>
       </TouchableOpacity>
     </View>
@@ -70,7 +44,6 @@ const FlyerItem = ({ item, navigation, toggleFavorite, isFavorite }) => {
 const styles = StyleSheet.create({
   flyerCard: {
     backgroundColor: '#ffffff',
-    // marginBottom: 15,
     marginBottom: 5,
     borderRadius: 12,
     overflow: 'hidden',
@@ -119,8 +92,6 @@ const styles = StyleSheet.create({
   flyerValidity: {
     fontSize: 13,
     color: '#777',
-    // marginTop: 5,
-    // backgroundColor : '#eeee',
   },
   heartIcon: {
     position: 'absolute',
@@ -130,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     elevation: 5,
-    zIndex: 10, // Ensure it's above other elements
+    zIndex: 10,
   },
 });
 

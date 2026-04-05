@@ -1,3 +1,4 @@
+// App/components/tabs.jsx
 /* eslint-disable react/react-in-jsx-scope */
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import {Text} from 'react-native-paper';

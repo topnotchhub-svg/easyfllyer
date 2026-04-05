@@ -1,3 +1,4 @@
+// App/Navigations/stack-nav.tsx
 import {
   createStackNavigator,
   CardStyleInterpolators,
@@ -12,6 +13,9 @@ import DealScreen from '../Screens/deals';
 import ListsScreen from '../Screens/List';
 import UpdatePostalCodeScreen from '../Screens/Update-Postal-Code';
 import StoresListScreen from '../Screens/Store-List-Screen';
+import StoreFlyersScreen from '../Screens/Store-Flyers-Screen';
+import BrandsListScreen from '../Screens/Brands-List-Screen';
+import BrandFlyersScreen from '../Screens/Brand-Flyers-Screen';
 import CoolCatScreen from '../Screens/CoolCatScreen';
 import SpecialEventDetailScreen from '../Screens/SpecialEventDetail';
 
@@ -108,6 +112,19 @@ const StackNavigation = () => {
           cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         }}
       />
+
+      <Stack.Screen name="StoreFlyers" component={StoreFlyersScreen} />
+
+      {/* Brand Screen: Default Slide from Right */}
+      <Stack.Screen
+        name="brands"
+        component={BrandsListScreen }
+        options={{
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        }}
+      />
+
+      <Stack.Screen name="BrandFlyers" component={BrandFlyersScreen} />
 
       <Stack.Screen
         name="cat"

@@ -1,26 +1,9 @@
+// App/Screens/Flyer/index.tsx
 import React, { useMemo, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Animated,
-  Easing,
-  PanResponder,
-  Share,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Animated, Easing, PanResponder, Share, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator, Platform, } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RNFS from 'react-native-fs';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, } from 'react-native-safe-area-context';
 
 type Deal = {
   name: string;
@@ -37,23 +20,9 @@ const MIN_HEIGHT = 56;
 const MAX_HEIGHT = 180;
 
 const isBase64 = (uri?: string) => !!uri && uri.startsWith('data:image/');
-const filenameFromUrl = (url: string) =>
-  url.split('?')[0].split('/').pop() || 'image';
+const filenameFromUrl = (url: string) => url.split('?')[0].split('/').pop() || 'image';
 
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
+const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ];
 
 const parseToDate = (v?: string): Date | null => {
   if (!v) return null;
@@ -68,8 +37,7 @@ const parseToDate = (v?: string): Date | null => {
   return null;
 };
 
-const fmtFull = (d: Date) =>
-  `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+const fmtFull = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 
 const formatRangeCondensed = (from?: string, to?: string): string => {
   const s = parseToDate(from);
@@ -102,18 +70,7 @@ const computeValidity = (from?: string, to?: string): ValidMeta | null => {
   if (!start && !end) return null;
 
   const now = new Date();
-  const endOfDay = end
-    ? new Date(
-        end.getFullYear(),
-        end.getMonth(),
-        end.getDate(),
-        23,
-        59,
-        59,
-        999,
-      )
-    : null;
-
+  const endOfDay = end ? new Date( end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999, ) : null;
   let status: ValidMeta['status'];
   let statusLabel = '';
 
@@ -137,7 +94,6 @@ const FlyerScreen = ({ route, navigation }: any) => {
     [route.params?.deal],
   );
   const insets = useSafeAreaInsets();
-
   const animatedHeight = useRef(new Animated.Value(MIN_HEIGHT)).current;
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -176,13 +132,10 @@ const FlyerScreen = ({ route, navigation }: any) => {
     }),
   ).current;
 
-  // Image loading states with better error handling
   const [flyerAspect, setFlyerAspect] = useState<number | undefined>(undefined);
   const [qrAspect, setQrAspect] = useState<number | undefined>(1);
   const [imgLoading, setImgLoading] = useState<boolean>(!!deal.image);
-  const [qrLoading, setQrLoading] = useState<boolean>(
-    !!(deal.storeQrCode || deal.brandQrCode),
-  );
+  const [qrLoading, setQrLoading] = useState<boolean>( !!(deal.storeQrCode || deal.brandQrCode), );
   const [imgError, setImgError] = useState<boolean>(false);
   const [qrError, setQrError] = useState<boolean>(false);
 
@@ -227,8 +180,7 @@ const FlyerScreen = ({ route, navigation }: any) => {
       if (deal.image) {
         if (isBase64(deal.image)) {
           const base64Data = deal.image.replace(/^data:image\/\w+;base64,/, '');
-          const ext =
-            deal.image.match(/^data:image\/(\w+);base64,/)?.[1] || 'png';
+          const ext = deal.image.match(/^data:image\/(\w+);base64,/)?.[1] || 'png';
           filePath = `${RNFS.CachesDirectoryPath}/flyer.${ext}`;
           await RNFS.writeFile(filePath, base64Data, 'base64');
         } else {
@@ -260,52 +212,33 @@ const FlyerScreen = ({ route, navigation }: any) => {
   return (
     <SafeAreaView edges={['top']} style={styles.safeTop}>
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
-          >
-            <Icon name="arrow-back" size={24} color="#000" />
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }} > 
+            <Icon name="arrow-back" size={24} color="#000" /> 
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {deal.name || 'Flyer'}
-          </Text>
+          
+          <Text style={styles.headerTitle} numberOfLines={1}> {deal.name || 'Flyer'} </Text>
+          
           <View style={styles.headerIcons}>
-            <TouchableOpacity
-              onPress={handleShare}
-              hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
-            >
-              <Icon name="share" size={22} color="#000" style={styles.icon} />
+            <TouchableOpacity onPress={handleShare} hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }} > 
+              <Icon name="share" size={22} color="#000" style={styles.icon} /> 
             </TouchableOpacity>
-            <TouchableOpacity
-              hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
-            >
-              <Icon
-                name="more-vert"
-                size={22}
-                color="#000"
-                style={styles.icon}
-              />
+            
+            <TouchableOpacity hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }} >
+              <Icon name="more-vert" size={22} color="#000" style={styles.icon} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Info */}
         <View style={styles.storeInfo}>
           {!!deal.title && <Text style={styles.storeTitle}>{deal.title}</Text>}
-          {!!deal.description && (
-            <Text style={styles.description}>{deal.description}</Text>
-          )}
+          {!!deal.description && ( <Text style={styles.description}>{deal.description}</Text> )}
 
-          {/* Validity */}
           {validMeta && (
             <View style={styles.validBlock}>
               <View style={styles.validRow}>
                 <Icon name="event" size={18} color="#0B274A" />
-                <Text style={styles.validRangeText}>
-                  Valid: {validMeta.rangeLabel}
-                </Text>
+                <Text style={styles.validRangeText}> Valid: {validMeta.rangeLabel} </Text>
               </View>
 
               <View
@@ -350,7 +283,6 @@ const FlyerScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-        {/* Content */}
         <ScrollView
           style={styles.flyerContent}
           onScroll={handleScroll}
@@ -360,7 +292,7 @@ const FlyerScreen = ({ route, navigation }: any) => {
           }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Flyer image with optimized loading */}
+
           {!!deal.image && (
             <View style={styles.flyerSection}>
               <View style={styles.imageWrap}>
@@ -413,7 +345,6 @@ const FlyerScreen = ({ route, navigation }: any) => {
             </View>
           )}
 
-          {/* QR code with optimized loading */}
           <View style={styles.qrCodeContainer}>
             {qrUri ? (
               <>
@@ -466,7 +397,6 @@ const FlyerScreen = ({ route, navigation }: any) => {
           </View>
         </ScrollView>
 
-        {/* Bottom Sheet */}
         <Animated.View
           {...panResponder.panHandlers}
           style={[

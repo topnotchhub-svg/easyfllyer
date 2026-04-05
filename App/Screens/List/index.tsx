@@ -2,10 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../../store/store';
-import {
-  fetchFavorites,
-  toggleFavorite,
-} from '../../../store/slices/favoritesSlice';
+import { fetchFavorites, toggleFavorite, } from '../../../store/slices/favoritesSlice';
 import {toggleBrandFlyer} from '../../../store/slices/brandSlice';
 import {toggleStoreFlyer} from '../../../store/slices/storeSlice';
 import Header from './_components/Header';
@@ -17,21 +14,12 @@ import {toggleEvents} from '../../../store/slices/eventSlice';
 const ListsScreen = ({navigation}: any) => {
   const userData = useContext(AuthContext);
   const dispatch = useDispatch();
-
   const [activeTab, setActiveTab] = useState('favorites');
 
-  // Fetching data from Redux store
   const events = useSelector((state: RootState) => state.Events || []);
   const favorites = useSelector((state: RootState) => state.favorites || []);
-  const brandFlyers = useSelector(
-    (state: RootState) => state.brandFlyers || [],
-  );
-  const storeFavorites = useSelector(
-    (state: RootState) => state.storeFlyers || [],
-  );
-
-  // Filter favorite events from events state
-  // const favoriteEvents = events.filter(event => event.isFavorite);
+  const brandFlyers = useSelector( (state: RootState) => state.brandFlyers || [], );
+  const storeFavorites = useSelector( (state: RootState) => state.storeFlyers || [], );
 
   useEffect(() => {
     if (activeTab === 'favorites') {
@@ -47,7 +35,7 @@ const ListsScreen = ({navigation}: any) => {
     } else if (activeTab === 'storeFlyers') {
       dispatch(toggleStoreFlyer(item));
     } else {
-      dispatch(toggleEvents(item)); // Handle event deletion
+      dispatch(toggleEvents(item)); 
     }
   };
 

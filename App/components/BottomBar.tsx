@@ -1,26 +1,23 @@
-// BottomBar.tsx
+// App/components/BottomBar.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import {
-  useSafeAreaInsets,
-  SafeAreaView,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView, } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
 export default function BottomBar({ navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    // Ensures background fills the curved corners / home-indicator zone
     <SafeAreaView edges={['bottom']} style={styles.safeBottom}>
       <View
         style={[
           styles.bar,
-          // If there’s no bottom inset (3-button nav), keep at least 10px
           { paddingBottom: Math.max(insets.bottom, 10) },
         ]}
       >
+        {/* Home Tab */}
         <TouchableOpacity
           onPress={() => navigation.navigate('home')}
           style={styles.item}
@@ -31,6 +28,18 @@ export default function BottomBar({ navigation }: any) {
           <Text style={styles.label}>Browse</Text>
         </TouchableOpacity>
 
+        {/* Brands Tab */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('brands')}
+          style={styles.item}
+        >
+          <Text style={styles.icon}>
+            <FontAwesomeIcon name="building-o" size={22} color="#000" />
+          </Text>
+          <Text style={styles.label}>Brands</Text>
+        </TouchableOpacity>
+
+        {/* Stores Tab */}
         <TouchableOpacity
           onPress={() => navigation.navigate('store')}
           style={styles.item}
@@ -41,6 +50,7 @@ export default function BottomBar({ navigation }: any) {
           <Text style={styles.label}>Stores</Text>
         </TouchableOpacity>
 
+        {/* Lists Tab */}
         <TouchableOpacity
           onPress={() => navigation.navigate('List')}
           style={styles.item}
@@ -66,7 +76,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#becbd6',
     paddingTop: 10,
   },
-  item: { alignItems: 'center' },
+  item: { 
+    alignItems: 'center',
+    flex: 1,
+  },
   icon: { color: '#000', fontSize: 20 },
   label: { color: '#000', fontSize: 12, marginTop: 5 },
 });

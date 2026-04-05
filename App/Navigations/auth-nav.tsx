@@ -1,3 +1,4 @@
+// App/Navigations/auth-nav.tsx
 import React from 'react';
 import {
   CardStyleInterpolators,
