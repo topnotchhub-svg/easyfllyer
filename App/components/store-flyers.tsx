@@ -1,13 +1,6 @@
+// app/components/store-flyers.tsx
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchStoreFlyersWithStoreImage} from '../../actions/store-flyers/fetch-store-flyers';
@@ -65,30 +58,18 @@ const StoreFlyersComponent = ({userData, navigation}: any) => {
 
     return (
       <View style={styles.flyerCard}>
-        <TouchableOpacity
-          style={styles.heartIcon}
-          onPress={() => toggleFavorite(item)}>
-          <Icon
-            name={isFavorite ? 'heart' : 'heart-o'}
-            size={22}
-            color={isFavorite ? '#FF0000' : '#888'}
-          />
+        <TouchableOpacity style={styles.heartIcon} onPress={() => toggleFavorite(item)}>
+          <Icon name={isFavorite ? 'heart' : 'heart-o'} size={22} color={isFavorite ? '#FF0000' : '#888'} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigateToFlyerScreen(item)}>
-          <Image
-            source={{uri: item.image}}
-            style={styles.flyerImage}
-            resizeMode="cover"
-          />
+          <Image source={{uri: item.image}} style={styles.flyerImage} resizeMode="cover" />
           <View style={styles.flyerInfo}>
             <Image source={{uri: item.storeImage}} style={styles.storeImage} />
             <View style={styles.textInfo}>
               <Text style={styles.storeName}>{item.storeName}</Text>
               <Text style={styles.flyerTitle}>{item.title}</Text>
-              <Text style={styles.flyerValidity}>
-                Until : {formatDate(item.validTo)}
-              </Text>
+              <Text style={styles.flyerValidity}> Until : {formatDate(item.validTo)} </Text>
               {/* Valid From: {formatDate(item.validFrom)}  */}
             </View>
           </View>
@@ -108,9 +89,7 @@ const StoreFlyersComponent = ({userData, navigation}: any) => {
   if (storeFlyers.length === 0) {
     return (
       <View style={styles.noFlyersContainer}>
-        <Text style={styles.noFlyersText}>
-          No flyers available for this store.
-        </Text>
+        <Text style={styles.noFlyersText}> No flyers available for this store. </Text>
       </View>
     );
   }

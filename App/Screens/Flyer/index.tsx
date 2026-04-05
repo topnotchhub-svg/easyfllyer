@@ -18,12 +18,9 @@ type Deal = {
 
 const MIN_HEIGHT = 56;
 const MAX_HEIGHT = 180;
-
 const isBase64 = (uri?: string) => !!uri && uri.startsWith('data:image/');
 const filenameFromUrl = (url: string) => url.split('?')[0].split('/').pop() || 'image';
-
 const MONTHS = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ];
-
 const parseToDate = (v?: string): Date | null => {
   if (!v) return null;
   const d = new Date(v);
@@ -38,7 +35,6 @@ const parseToDate = (v?: string): Date | null => {
 };
 
 const fmtFull = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-
 const formatRangeCondensed = (from?: string, to?: string): string => {
   const s = parseToDate(from);
   const e = parseToDate(to);
@@ -174,7 +170,71 @@ const FlyerScreen = ({ route, navigation }: any) => {
     );
   };
 
-  const handleShare = async () => {
+const handleShare = async () => {
+  try {
+    // First, try to share with image
+    if (deal.image && Platform.OS === 'android') {
+      try {
+        let filePath: string | undefined;
+        
+        if (isBase64(deal.image)) {
+          const base64Data = deal.image.replace(/^data:image\/\w+;base64,/, '');
+          const ext = deal.image.match(/^data:image\/(\w+);base64,/)?.[1] || 'png';
+          filePath = `${RNFS.CachesDirectoryPath}/flyer_${Date.now()}.${ext}`;
+          await RNFS.writeFile(filePath, base64Data, 'base64');
+        } else {
+          const fname = `flyer_${Date.now()}.png`;
+          filePath = `${RNFS.CachesDirectoryPath}/${fname}`;
+          const downloadResult = await RNFS.downloadFile({
+            fromUrl: deal.image,
+            toFile: filePath,
+          }).promise;
+          
+          if (downloadResult.statusCode !== 200) {
+            throw new Error('Download failed');
+          }
+        }
+        
+        if (filePath) {
+          await Share.share({
+            message: `Check out this deal: ${deal.title || deal.name}\nValid: ${deal.validFrom || ''} to ${deal.validTo || ''}\n\nGet the app here:\nhttps://play.google.com/store/apps/details?id=com.jspromotionalatestversion`,
+            url: filePath ? `file://${filePath}` : undefined,
+          });
+          
+          // Clean up
+          setTimeout(async () => {
+            try {
+              await RNFS.unlink(filePath);
+            } catch (e) {}
+          }, 5000);
+          return;
+        }
+      } catch (imageError) {
+        console.log('Image sharing failed, falling back to text-only:', imageError);
+      }
+    }
+    
+    // Fallback: Share without image
+    await Share.share({
+      message: `🔥 Check out this deal: ${deal.title || deal.name}\n\n${
+        deal.description ? `${deal.description}\n\n` : ''
+      }📅 Valid: ${deal.validFrom || '?'} to ${deal.validTo || '?'}\n\n📱 Get the app:\nhttps://play.google.com/store/apps/details?id=com.jspromotionalatestversion`,
+      title: deal.title || deal.name,
+    });
+  } catch (err: any) {
+    console.error('Error sharing flyer:', err?.message || err);
+    // Last resort: simple text share
+    try {
+      await Share.share({
+        message: `Check out this deal: ${deal.title || deal.name} on our app!`,
+      });
+    } catch (finalError) {
+      console.error('Final share attempt failed:', finalError);
+    }
+  }
+};
+
+ /* const handleShare = async () => {
     try {
       let filePath: string | undefined;
       if (deal.image) {
@@ -204,7 +264,7 @@ const FlyerScreen = ({ route, navigation }: any) => {
     } catch (err: any) {
       console.error('Error sharing flyer:', err?.message || err);
     }
-  };
+  };*/
 
   const qrUri = useMemo(() => deal.storeQrCode || deal.brandQrCode, [deal]);
   const validMeta = computeValidity(deal.validFrom, deal.validTo);
@@ -224,9 +284,9 @@ const FlyerScreen = ({ route, navigation }: any) => {
               <Icon name="share" size={22} color="#000" style={styles.icon} /> 
             </TouchableOpacity>
             
-            <TouchableOpacity hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }} >
+            {/*<TouchableOpacity hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }} >
               <Icon name="more-vert" size={22} color="#000" style={styles.icon} />
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
           </View>
         </View>
 
@@ -397,35 +457,6 @@ const FlyerScreen = ({ route, navigation }: any) => {
           </View>
         </ScrollView>
 
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={[
-            styles.bottomSheet,
-            {
-              height: Animated.add(
-                animatedHeight,
-                new Animated.Value(insets.bottom),
-              ),
-              paddingBottom: insets.bottom + 12,
-            },
-          ]}
-        >
-          <View style={styles.centerLine} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle} numberOfLines={1}>
-              {deal.name || 'Flyer'}
-            </Text>
-          </View>
-          <View style={styles.sheetActions}>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={styles.shareDealButton}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.shareDealText}>Share Deal</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
       </View>
     </SafeAreaView>
   );

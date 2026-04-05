@@ -28,6 +28,7 @@ export async function fetchFlyersByPostalCodeWithBrandImage(
     const brandQuery = query(
       brandsCollection,
       where('postalCode', '==', postalCode),
+      where('active', '==', true)
     );
     const brandSnapshot = await getDocs(brandQuery);
 
@@ -39,7 +40,7 @@ export async function fetchFlyersByPostalCodeWithBrandImage(
     const brandData = brandSnapshot.docs.reduce((acc, doc) => {
       acc[doc.id] = {
         id: doc.id,
-        image: doc.data().image || null,
+        image: doc.data().compressedImage || null,
         name: doc.data().name || null,
         qrCode: doc.data().qrCode || null, 
       };
@@ -56,7 +57,8 @@ export async function fetchFlyersByPostalCodeWithBrandImage(
     let flyerQuery;
     if (!selectedCategories || selectedCategories.length === 0) {
       console.warn('No selected categories provided. Fetching all flyers.');
-      flyerQuery = query(flyersCollection, where('brandId', 'in', brandIds));
+      flyerQuery = query(flyersCollection, where('brandId', 'in', brandIds),
+      where('approved', '==', true));
     } else {
       const selectedCategoryNames = selectedCategories.map(cat => cat.name);
 
@@ -64,6 +66,7 @@ export async function fetchFlyersByPostalCodeWithBrandImage(
         flyersCollection,
         where('brandId', 'in', brandIds),
         where('categoryId', 'in', selectedCategoryNames), 
+        where('approved', '==', true)
       );
     }
 

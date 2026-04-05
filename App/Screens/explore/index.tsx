@@ -1,3 +1,4 @@
+// App/Screens/explore/index.tsx
 /* eslint-disable react-native/no-inline-styles */
 import React, { useContext, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, StatusBar, } from 'react-native';
@@ -12,10 +13,10 @@ import { CameraView } from '../../components/camera-view';
 import CustomAlertBox from '../../components/custom-alert-box';
 import Icon from 'react-native-vector-icons/Ionicons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { deleteUser } from '../../../actions/postal-code/delete-code';
 import StoreFlyersComponent from '../../components/store-flyers';
 import { GiftCardsComponent } from '../../components/gift-Card';
-import BottomBar from '../../components/BottomBar';
 
 const ExploreScreen = ({ navigation }: any) => {
   const { userData, logout } = useContext(AuthContext);
@@ -33,15 +34,16 @@ const ExploreScreen = ({ navigation }: any) => {
         return;
       }
       const result = await deleteUser(userData.postalCode, userData.userId);
-      if (result.success) { toast.show('Account and postal code deleted successfully!', { type: 'success', });
+      if (result.success) { 
+        toast.show('Account and postal code deleted successfully!', { type: 'success' });
         logout();
         navigation.reset({ index: 0, routes: [{ name: 'signUp' }] });
       } else {
-        toast.show(result.message || 'Failed to delete account.', { type: 'danger', });
+        toast.show(result.message || 'Failed to delete account.', { type: 'danger' });
       }
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.show('An error occurred while deleting the account.', { type: 'danger', });
+      toast.show('An error occurred while deleting the account.', { type: 'danger' });
     }
   };
 
@@ -49,17 +51,13 @@ const ExploreScreen = ({ navigation }: any) => {
     switch (activeTab) {
       case 0:
         return activeSubTab === 0 ? (
-          <FlyersComponent userData={userData} mediaLink="https://tinynote.in/ofo/public/assests/baseimg/" navigation={navigation} />
+          <FlyersComponent userData={userData} navigation={navigation} />
         ) : (
           <StoreFlyersComponent userData={userData} navigation={navigation} />
         );
       case 1:
         return (
-          <SpecialEventsComponent
-            userData={userData}
-            mediaLink="https://tinynote.in/ofo/public/assests/baseimg/"
-            navigation={navigation}
-          />
+          <SpecialEventsComponent userData={userData} navigation={navigation} />
         );
       case 2:
         return (
@@ -148,6 +146,7 @@ const ExploreScreen = ({ navigation }: any) => {
       {/* BOTTOM safe area (protects bottom nav from home indicator) */}
       <SafeAreaView edges={['bottom']} style={styles.safeBottom}>
         <View style={styles.bottomNav}>
+          {/* Browse Tab */}
           <TouchableOpacity
             onPress={() => navigation.navigate('home')}
             style={styles.navItem}
@@ -158,6 +157,18 @@ const ExploreScreen = ({ navigation }: any) => {
             <Text style={styles.navText}>Browse</Text>
           </TouchableOpacity>
 
+          {/* ✅ Brands Tab - NEW */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('brands')}
+            style={styles.navItem}
+          >
+            <Text style={styles.navIcon}>
+              <FontAwesomeIcon name="building-o" size={22} color="#000" />
+            </Text>
+            <Text style={styles.navText}>Brands</Text>
+          </TouchableOpacity>
+
+          {/* Stores Tab */}
           <TouchableOpacity
             onPress={() => navigation.navigate('store')}
             style={styles.navItem}
@@ -168,6 +179,7 @@ const ExploreScreen = ({ navigation }: any) => {
             <Text style={styles.navText}>Stores</Text>
           </TouchableOpacity>
 
+          {/* Lists Tab */}
           <TouchableOpacity
             onPress={() => navigation.navigate('List')}
             style={styles.navItem}
@@ -179,9 +191,6 @@ const ExploreScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-
-      {/* ✅ Use reusable bottom bar */}
-      {/* <BottomBar navigation={navigation} /> */}
     </>
   );
 };
@@ -205,7 +214,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#becbd6',
     paddingVertical: 10,
   },
-  navItem: { alignItems: 'center' },
+  navItem: { 
+    alignItems: 'center',
+    flex: 1,
+  },
   navIcon: { color: '#000', fontSize: 20 },
   navText: { color: '#000', fontSize: 12, marginTop: 5 },
 });

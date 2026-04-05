@@ -1,26 +1,10 @@
+// App/Screens/SpecialEventDetail/index.tsx
 import React, { useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Animated,
-  Easing,
-  PanResponder,
-  Share,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Animated, Easing, PanResponder, Share, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator,
+  Platform, } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import RNFS from 'react-native-fs';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, } from 'react-native-safe-area-context';
 import { formatDate } from '../../components/store-flyers';
 
 type SpecialEvent = {
@@ -186,7 +170,6 @@ const SpecialEventDetailScreen = ({ route, navigation }: any) => {
 
   const validMeta = computeValidity(event.startDate, event.endDate);
 
-  // Check if we have valid event data
   if (!event.id) {
     return (
       <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -235,16 +218,6 @@ const SpecialEventDetailScreen = ({ route, navigation }: any) => {
               hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
             >
               <Icon name="share" size={22} color="#000" style={styles.icon} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}
-            >
-              <Icon
-                name="more-vert"
-                size={22}
-                color="#000"
-                style={styles.icon}
-              />
             </TouchableOpacity>
           </View>
         </View>
@@ -373,42 +346,6 @@ const SpecialEventDetailScreen = ({ route, navigation }: any) => {
           </View>
         </ScrollView>
 
-        {/* Bottom Sheet */}
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={[
-            styles.bottomSheet,
-            {
-              height: Animated.add(
-                animatedHeight,
-                new Animated.Value(insets.bottom),
-              ),
-              paddingBottom: insets.bottom + 12,
-            },
-          ]}
-        >
-          <View style={styles.centerLine} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle} numberOfLines={1}>
-              {event.name}
-            </Text>
-          </View>
-          <View style={styles.sheetActions}>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={styles.shareEventButton}
-              activeOpacity={0.9}
-            >
-              <Icon
-                name="share"
-                size={16}
-                color="#4C6EF5"
-                style={styles.shareIcon}
-              />
-              <Text style={styles.shareEventText}>Share Event</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
       </View>
     </SafeAreaView>
   );

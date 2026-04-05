@@ -25,7 +25,6 @@ interface FavoriteDocument extends Favorite {
   createdAt: Timestamp;
 }
 
-// Get all favorites for a user
 export const getUserFavorites = async (userId: string): Promise<Favorite[]> => {
   if (!userId) {
     console.log('No userId provided');
@@ -44,7 +43,6 @@ export const getUserFavorites = async (userId: string): Promise<Favorite[]> => {
       image: doc.data().image,
     }));
 
-    console.log(`📥 Loaded ${favorites.length} favorites from Firebase for user ${userId}`);
     return favorites;
   } catch (error) {
     console.error('Error fetching favorites from Firebase:', error);
@@ -52,7 +50,6 @@ export const getUserFavorites = async (userId: string): Promise<Favorite[]> => {
   }
 };
 
-// Add a favorite to Firebase
 export const addFavoriteToFirebase = async (
   userId: string,
   favorite: Favorite,
@@ -64,7 +61,6 @@ export const addFavoriteToFirebase = async (
   }
 
   try {
-    // Check if already exists to avoid duplicates
     const favoritesCollection = collection(db, 'favorites');
     const q = query(
       favoritesCollection,
@@ -74,7 +70,6 @@ export const addFavoriteToFirebase = async (
     const existing = await getDocs(q);
 
     if (!existing.empty) {
-      console.log('Favorite already exists in Firebase, skipping...');
       return true;
     }
 
@@ -90,7 +85,6 @@ export const addFavoriteToFirebase = async (
 
     const newDocRef = doc(favoritesCollection);
     await setDoc(newDocRef, favoriteData);
-    console.log('✅ Favorite saved to Firebase:', favorite.name);
     return true;
   } catch (error) {
     console.error('Error saving favorite to Firebase:', error);
@@ -98,7 +92,6 @@ export const addFavoriteToFirebase = async (
   }
 };
 
-// Remove a favorite from Firebase
 export const removeFavoriteFromFirebase = async (
   userId: string,
   favorite: Favorite,
@@ -122,14 +115,12 @@ export const removeFavoriteFromFirebase = async (
       return true;
     }
 
-    // Delete all matching documents (should only be one)
     const batch = writeBatch(db);
     querySnapshot.docs.forEach(docSnap => {
       batch.delete(docSnap.ref);
     });
     await batch.commit();
 
-    console.log('✅ Favorite removed from Firebase:', favorite.name);
     return true;
   } catch (error) {
     console.error('Error removing favorite from Firebase:', error);
@@ -137,7 +128,6 @@ export const removeFavoriteFromFirebase = async (
   }
 };
 
-// Load favorites from Firebase on app start
 export const syncFavoritesFromFirebase = async (
   userId: string,
   dispatch: any,
@@ -149,7 +139,6 @@ export const syncFavoritesFromFirebase = async (
     const firebaseFavorites = await getUserFavorites(userId);
     // Dispatch action to populate Redux with Firebase favorites
     dispatch(setFavoritesAction(firebaseFavorites));
-    console.log(`🔄 Synced ${firebaseFavorites.length} favorites from Firebase to Redux`);
   } catch (error) {
     console.error('Error syncing favorites from Firebase:', error);
   }

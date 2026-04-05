@@ -16,7 +16,8 @@ export interface Flyer {
 export const fetchFlyersByStore = async (storeId: string): Promise<Flyer[]> => {
   try {
     const flyersCollection = collection(db, 'storeFlyers');
-    const q = query(flyersCollection, where('storeId', '==', storeId));
+    const q = query(flyersCollection, where('storeId', '==', storeId),
+      where('approved', '==', true));
     const querySnapshot = await getDocs(q);
     
     const flyers = querySnapshot.docs.map(doc => ({

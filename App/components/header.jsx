@@ -1,7 +1,8 @@
+// App/components/header.jsx
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/react-in-jsx-scope */
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import {Text} from 'react-native-paper';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 
@@ -15,7 +16,7 @@ export const Header = ({
     <View style={styles.header}>
       <View style={styles.headerdiv}>
         <Text style={styles.headerText}>
-          Savings from: {userData?.postalCode}{' '}
+          For: {userData?.postalCode}{' '}
         </Text>
         <TouchableOpacity
           onPress={() => navigation.navigate('updatepostalcode')}>
@@ -28,15 +29,12 @@ export const Header = ({
         </TouchableOpacity>
       </View>
       <View style={styles.headerIcons}>
-        {/* <TouchableOpacity>
-          <Text style={styles.icon}>🔔</Text>
-        </TouchableOpacity> */}
         <TouchableOpacity onPress={() => setAlertVisible(true)}>
           <AntDesignIcon name="deleteuser" size={24} color="#000" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setIsCameraActive(true)}
-          style={{marginLeft: 8}}>
+          style={{ marginLeft: 8 }}>
           <MaterialIcon name="qr-code" size={24} color="#000" />
         </TouchableOpacity>
       </View>
@@ -51,6 +49,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#ffffff',
     borderBottomColor: '#000000',
+    borderBottomWidth: 1,
   },
   headerText: {
     color: '#000000',

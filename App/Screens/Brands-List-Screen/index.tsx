@@ -1,19 +1,12 @@
 // App/Screens/Brands-List-Screen/index.tsx
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  RefreshControl,
-} from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, TextInput, RefreshControl, } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { fetchAllBrands } from '../../../actions/brand/fetch-brands';
+import { Header } from '../../../App/components/header';
+import { AuthContext } from '../../../lib/AuthContext';
 
 interface Brand {
   id: string;
@@ -64,12 +57,8 @@ const BrandItem = ({ item, onPress }: { item: Brand; onPress: (item: Brand) => v
           <Text style={[styles.brandDescription, item.active === false && styles.inactiveText]}>
             {item.description || 'No description available'}
           </Text>
-          <Text style={[styles.brandAddress, item.active === false && styles.inactiveText]}>
-            📍 {item.postalCode || 'No postal code provided'}
-          </Text>
-          <Text style={[styles.brandEmail, item.active === false && styles.inactiveText]}>
-            📧 {item.email || 'No email address provided'}
-          </Text>
+          <Text style={[styles.brandAddress, item.active === false && styles.inactiveText]}> 📍 {item.postalCode || 'No postal code provided'} </Text>
+          <Text style={[styles.brandEmail, item.active === false && styles.inactiveText]}> 📧 {item.email || 'No email address provided'} </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -78,11 +67,14 @@ const BrandItem = ({ item, onPress }: { item: Brand; onPress: (item: Brand) => v
 
 const BrandsListScreen = () => {
   const navigation = useNavigation();
+  const { userData } = useContext(AuthContext);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
     fetchBrands();
@@ -143,81 +135,95 @@ const BrandsListScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#4C6EF5" />
-        <Text style={styles.loadingText}>Loading brands...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#4C6EF5" />
+          <Text style={styles.loadingText}>Loading brands...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Brands</Text>
-        {!loading && brands.length > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{brands.length}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by brand name, description, or location..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <Header
+          userData={userData}
+          navigation={navigation}
+          setAlertVisible={setAlertVisible}
+          setIsCameraActive={setIsCameraActive}
         />
-        {searchQuery !== '' && (
-          <TouchableOpacity onPress={clearSearch}>
-            <Icon name="close-circle" size={20} color="#999" />
+
+        {/* Title Section with Back Button - Matching Stores Screen */}
+        <View style={styles.titleSection}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
+          <Text style={styles.title}>Brands</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Icon name="search" size={20} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by brand name, description, or location..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={clearSearch}>
+              <Icon name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Results Count */}
+        {!loading && filteredBrands.length > 0 && (
+          <Text style={styles.resultsCount}>
+            {filteredBrands.length} brand{filteredBrands.length !== 1 ? 's' : ''} found
+          </Text>
         )}
+
+        {/* Brand List */}
+        <FlatList
+          data={filteredBrands}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <BrandItem item={item} onPress={handleBrandPress} />
+          )}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4C6EF5']} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="business-outline" size={60} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {searchQuery ? 'No brands match your search' : 'No brands found'}
+              </Text>
+              {searchQuery && (
+                <TouchableOpacity onPress={clearSearch}>
+                  <Text style={styles.clearSearchText}>Clear search</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          }
+        />
       </View>
-
-      {/* Results Count */}
-      {!loading && filteredBrands.length > 0 && (
-        <Text style={styles.resultsCount}>
-          {filteredBrands.length} brand{filteredBrands.length !== 1 ? 's' : ''} found
-        </Text>
-      )}
-
-      {/* Brand List */}
-      <FlatList
-        data={filteredBrands}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <BrandItem item={item} onPress={handleBrandPress} />
-        )}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4C6EF5']} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="business-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {searchQuery ? 'No brands match your search' : 'No brands found'}
-            </Text>
-            {searchQuery && (
-              <TouchableOpacity onPress={clearSearch}>
-                <Text style={styles.clearSearchText}>Clear search</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        }
-      />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8F8FF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8F8FF',
@@ -233,31 +239,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  header: {
+  titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: '#F8F8FF',
     borderBottomWidth: 1,
     borderBottomColor: '#E8E8E8',
   },
-  headerTitle: {
-    fontSize: 28,
+  backButton: {
+    padding: 4,
+  },
+  title: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
-  countBadge: {
-    backgroundColor: '#4C6EF5',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  countText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+  placeholder: {
+    width: 32,
   },
   searchContainer: {
     flexDirection: 'row',

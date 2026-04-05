@@ -135,7 +135,7 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Search */}
         <TextInput
           style={styles.searchBar}
-          placeholder="Search for a store"
+          placeholder="Search for a store or brand"
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor="#8A8A8A"

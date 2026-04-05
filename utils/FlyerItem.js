@@ -1,3 +1,4 @@
+// utils/FlyerItem.js
 import React from 'react';
 import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -16,23 +17,56 @@ const FlyerItem = ({ item, navigation, toggleFavorite, isFavorite }) => {
     navigation.navigate('Flyer', { deal: item });
   };
 
+  // Determine which image to show (brand image for brand flyers, store image for store flyers)
+  const getEntityImage = () => {
+      return item.brandImage;
+  };
+
+  const getEntityName = () => {
+      return item.brandName;
+  };
+
+  const entityImage = getEntityImage();
+  const entityName = getEntityName();
+
   return (
     <View style={styles.flyerCard}>
-      <TouchableOpacity style={styles.heartIcon} onPress={() => toggleFavorite(item)} >
-        <Icon name={isFavorite ? 'heart' : 'heart-o'} size={22} color={isFavorite ? '#FF0000' : '#888'} />
+      {/* Heart Icon for Favorite */}
+      <TouchableOpacity
+        style={styles.heartIcon}
+        onPress={() => toggleFavorite(item)}
+      >
+        <Icon
+          name={isFavorite ? 'heart' : 'heart-o'}
+          size={22}
+          color={isFavorite ? '#FF0000' : '#888'}
+        />
       </TouchableOpacity>
 
+      {/* Flyer Content */}
       <TouchableOpacity onPress={navigateToFlyerScreen} activeOpacity={0.9}>
-        <Image source={{ uri: item.image }} style={styles.flyerImage} resizeMode="cover" />
+        <Image
+          source={{ uri: item.image }}
+          style={styles.flyerImage}
+          resizeMode="cover"
+        />
         <View style={styles.flyerDetails}>
+          {/* Brand/Store Image and Flyer Title */}
           <View style={styles.brandWithTitleContainer}>
-            {item.brandImage && (
-              <Image source={{ uri: item.brandImage }} style={styles.brandImage} resizeMode="contain" />
+            {entityImage && (
+              <Image
+                source={{ uri: entityImage }}
+                style={styles.brandImage}
+                resizeMode="contain"
+              />
             )}
             <View style={styles.textInfo}>
-              <Text style={styles.flyerTitle}> {item.title} </Text>
-              <Text style={styles.flyerDescription}> {item.description} </Text>
-              <Text style={styles.flyerValidity}> Until : {formatDate(item.validTo)} </Text>
+              <Text style={styles.entityName}>{entityName}</Text>
+              <Text style={styles.flyerTitle}>{item.title}</Text>
+              <Text style={styles.flyerDescription}>{item.description}</Text>
+              <Text style={styles.flyerValidity}>
+                Until : {formatDate(item.validTo)}
+              </Text>
             </View>
           </View>
         </View>
@@ -54,6 +88,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    position: 'relative',
   },
   flyerImage: {
     width: '100%',
@@ -74,24 +109,31 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   brandImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     marginRight: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  entityName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A5568',
+    marginBottom: 2,
   },
   flyerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
   },
   flyerDescription: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 13,
+    color: '#666',
     marginVertical: 4,
   },
   flyerValidity: {
-    fontSize: 13,
-    color: '#777',
+    fontSize: 12,
+    color: '#888',
   },
   heartIcon: {
     position: 'absolute',

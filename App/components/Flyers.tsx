@@ -6,13 +6,9 @@ import FlyerItem from '../../utils/FlyerItem';
 import { fetchFlyersByPostalCodeWithBrandImage, Flyer } from '../../actions/flyer/fetch-flyer';
 import { toggleBrandFlyer, setBrandFlyers } from '../../store/slices/brandSlice';
 import { RootState } from '../../store/store';
-import { 
-  addFavoriteToFirebase, 
-  removeFavoriteFromFirebase, 
-  getUserFavorites 
-} from '../../lib/favoritesService';
+import {  addFavoriteToFirebase,  removeFavoriteFromFirebase,  getUserFavorites  } from '../../lib/favoritesService';
 
-const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove mediaLink from here
+const FlyersComponent = ({ userData, navigation }: any) => { 
   const dispatch = useDispatch();
   const brandFlyers = useSelector((state: RootState) => state.brandFlyers);
   const selectedCategories = useSelector(
@@ -27,7 +23,6 @@ const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove medi
   useEffect(() => {
     const loadFavoritesFromFirebase = async () => {
       if (!userData?.userId) {
-        console.log('No user ID available yet');
         return;
       }
       
@@ -35,7 +30,6 @@ const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove medi
       try {
         const firebaseFavorites = await getUserFavorites(userData.userId);
         dispatch(setBrandFlyers(firebaseFavorites));
-        console.log(`✅ Loaded ${firebaseFavorites.length} favorites from Firebase`);
       } catch (error) {
         console.error('Error loading favorites from Firebase:', error);
       } finally {
@@ -92,7 +86,7 @@ const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove medi
             console.error('Failed to remove from Firebase, reverting...');
             dispatch(toggleBrandFlyer(flyerData)); 
           } else {
-            console.log('✅ Removed favorite from Firebase:', flyer.title);
+            
           }
         } else {
           const success = await addFavoriteToFirebase(
@@ -104,7 +98,7 @@ const FlyersComponent = ({ userData, navigation }: any) => { // 👈 Remove medi
             console.error('Failed to save to Firebase, reverting...');
             dispatch(toggleBrandFlyer(flyerData)); 
           } else {
-            console.log('✅ Saved favorite to Firebase:', flyer.title);
+            
           }
         }
       } catch (error) {

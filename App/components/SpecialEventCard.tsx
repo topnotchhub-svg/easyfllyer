@@ -84,18 +84,13 @@ const SpecialEventCard = ({ item, navigation }: any) => {
       {/* Event Details Section */}
       <View style={styles.details}>
         <View style={styles.brandWithTitleContainer}>
-          {item?.brand?.image || item?.store?.image ? (
+          
             <Image
-              source={{ uri: item?.brand?.image || item?.store?.image }}
+              source={{ uri: item?.brand?.compressedImage || item?.store?.image }}
               style={styles.brandImage}
               resizeMode="contain"
             />
-          ) : (
-            <View style={styles.placeholderBrandImage}>
-              {/* <Text style={styles.placeholderText}>No Image</Text> */}
-            </View>
-          )}
-
+          
           <View style={styles.textInfo}>
             <Text
               style={styles.storeName}

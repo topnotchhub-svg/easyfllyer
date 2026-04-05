@@ -12,7 +12,7 @@ export const Tabs = ({
   <View>
     {/* Main Tabs */}
     <View style={styles.tabs}>
-      {['Flyers', 'Special Events', 'Gift Cards'].map((tab, index) => (
+      {['Flyers', 'Special Events', 'Deals'].map((tab, index) => (
         <TouchableOpacity
           key={index}
           style={[styles.tab, activeTab === index && styles.activeTab]}

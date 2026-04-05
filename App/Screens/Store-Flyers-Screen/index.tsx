@@ -1,5 +1,6 @@
 // App/Screens/Store-Flyers-Screen/index.tsx
-import React, { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,6 +13,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { fetchFlyersByStore } from '../../../actions/store/fetch-store-flyers';
+import { Header } from '../../../App/components/header';
+import { AuthContext } from '../../../lib/AuthContext';
 
 // Define the Flyer interface
 interface Flyer {
@@ -60,10 +63,13 @@ const FlyerItem = ({ item, onPress }: { item: Flyer; onPress: (item: Flyer) => v
 const StoreFlyersScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { userData } = useContext(AuthContext);
   const { storeId, storeName } = (route.params as RouteParams) || { storeId: '', storeName: '' };
   
-  const [flyers, setFlyers] = useState<Flyer[]>([]); // 👈 Add Flyer[] type
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
     const fetchFlyers = async () => {
@@ -85,7 +91,7 @@ const StoreFlyersScreen = () => {
   }, [storeId]);
 
   const handleFlyerPress = (flyer: Flyer) => {
-  (navigation as any).navigate('Flyer', { deal: flyer });
+    (navigation as any).navigate('Flyer', { deal: flyer });
   };
 
   if (loading) {
@@ -97,22 +103,31 @@ const StoreFlyersScreen = () => {
   }
 
   return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+      <Header
+        userData={userData}
+        navigation={navigation}
+        setAlertVisible={setAlertVisible}
+        setIsCameraActive={setIsCameraActive}
+      />
+
+      {/* Title Section */}
+      <View style={styles.titleSection}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>{storeName || 'Store Flyers'}</Text>
-          {!loading && (
-            <Text style={styles.flyerCount}>
-              {flyers.length} flyer{flyers.length !== 1 ? 's' : ''}
-            </Text>
-          )}
-        </View>
-        <View style={styles.headerRight} />
+        <Text style={styles.title}>{storeName || 'Store Flyers'}</Text>
+        <View style={styles.placeholder} />
       </View>
+
+      {/* Flyers Count */}
+      {!loading && flyers.length > 0 && (
+        <Text style={styles.flyerCount}>
+          {flyers.length} flyer{flyers.length !== 1 ? 's' : ''} available
+        </Text>
+      )}
 
       {/* Flyers List */}
       {flyers.length === 0 ? (
@@ -132,15 +147,20 @@ const StoreFlyersScreen = () => {
         />
       )}
     </View>
+        </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8F8FF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8F8FF',
   },
-  header: {
+  titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -150,21 +170,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E8E8E8',
   },
-  headerTitleContainer: {
-    alignItems: 'center',
+  backButton: {
+    padding: 4,
   },
-  headerTitle: {
+  title: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  flyerCount: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 2,
+  placeholder: {
+    width: 32,
   },
-  headerRight: {
-    width: 24,
+  flyerCount: {
+    fontSize: 13,
+    color: '#666',
+    marginHorizontal: 16,
+    marginVertical: 8,
   },
   loaderContainer: {
     flex: 1,

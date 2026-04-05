@@ -1,30 +1,20 @@
 // App/Screens/Store-List-Screen/index.tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useContext } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-  TextInput,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Image, TextInput, } from 'react-native';
 import { AuthContext } from '../../../lib/AuthContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { fetchAllStores } from '../../../actions/store/fetch-store';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { Header } from '../../../App/components/header';
 
-// Define your navigation param list
 type RootStackParamList = {
   StoresList: undefined;
   StoreFlyers: { storeId: string; storeName: string };
   Flyer: { deal: any };
-  // Add other screens here
 };
 
-// Type the navigation hook
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 interface Store {
@@ -63,15 +53,9 @@ const StoreItem = ({ item, onPress }: { item: Store; onPress: (item: Store) => v
 
         <View style={styles.storeDetails}>
           <Text style={styles.storeName}>{item.name || 'No name provided'}</Text>
-          <Text style={styles.storeBrand}>
-            {item.description || 'No description available'}
-          </Text>
-          <Text style={styles.storeAddress}>
-            📍 {item.postalCode || 'No postal code provided'}
-          </Text>
-          <Text style={styles.storeEmail}>
-            📧 {item.email || 'No email address provided'}
-          </Text>
+          <Text style={styles.storeBrand}> {item.description || 'No description available'} </Text>
+          <Text style={styles.storeAddress}> 📍 {item.postalCode || 'No postal code provided'} </Text>
+          <Text style={styles.storeEmail}> 📧 {item.email || 'No email address provided'} </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -80,11 +64,13 @@ const StoreItem = ({ item, onPress }: { item: Store; onPress: (item: Store) => v
 
 const StoresListScreen = () => {
   const { userData } = useContext(AuthContext);
-  const navigation = useNavigation<NavigationProp>(); // 👈 Type the navigation
+  const navigation = useNavigation<NavigationProp>();
   const [stores, setStores] = useState<Store[]>([]);
   const [filteredStores, setFilteredStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -127,20 +113,28 @@ const StoresListScreen = () => {
   };
 
   return (
+  <SafeAreaView style={styles.safeArea} edges={['top']}>
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+      <Header
+        userData={userData}
+        navigation={navigation}
+        setAlertVisible={setAlertVisible}
+        setIsCameraActive={setIsCameraActive}
+      />
+
+      <View style={styles.titleSection}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Stores</Text>
-        <View style={styles.headerRight} />
+        <Text style={styles.title}>Stores</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by store name, description, or location..."
+          placeholder="Search by store name, description"
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -186,15 +180,20 @@ const StoresListScreen = () => {
         />
       )}
     </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8F8FF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8F8FF',
   },
-  header: {
+  titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -204,13 +203,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E8E8E8',
   },
-  headerTitle: {
+  backButton: {
+    padding: 4,
+  },
+  title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
-  headerRight: {
-    width: 24,
+  placeholder: {
+    width: 32,
   },
   searchContainer: {
     flexDirection: 'row',
