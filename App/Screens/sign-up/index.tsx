@@ -7,13 +7,37 @@ import { createPostalCodeUser } from '../../../actions/postal-code/create-code';
 
 const SignupScreen = () => {
   const [postalCode, setPostalCode] = useState('');
+  const [displayPostalCode, setDisplayPostalCode] = useState('');
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const { setIsLoggedIn, updateUserData } = useContext(AuthContext); 
 
+  // Format postal code with space after 3 digits
+  const formatPostalCode = (text: string) => {
+    // Remove non-alphanumeric characters
+    let cleaned = text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
+    // Limit to 6 characters
+    cleaned = cleaned.slice(0, 6);
+    
+    // Add space after 3 digits if length > 3
+    let formatted = cleaned;
+    if (cleaned.length > 3) {
+      formatted = `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+    }
+    
+    return { cleaned, formatted };
+  };
+
+  const handlePostalCodeChange = (text: string) => {
+    const { cleaned, formatted } = formatPostalCode(text);
+    setPostalCode(cleaned);
+    setDisplayPostalCode(formatted);
+  };
+
   const handleSignup = async () => {
-    if (!postalCode.trim()) {
-      toast.show('Postal Code is required!', { type: 'danger', placement: 'top', duration: 3000, animationType: 'slide-in', });
+    if (!postalCode || postalCode.length !== 6) {
+      toast.show('Please enter a valid 6-digit alphanumeric postal code!', { type: 'danger' });
       return;
     }
 
@@ -26,16 +50,16 @@ const SignupScreen = () => {
 
         await saveUserData('userData', userData);
         updateUserData(userData);
-        toast.show('User registered successfully!', { type: 'success', placement: 'top', duration: 3000, animationType: 'slide-in', });
+        toast.show('User registered successfully!', { type: 'success' });
 
         setIsLoggedIn(true);
       } else {
-        throw new Error( result.message || 'Registration failed. Please try again.', );
+        throw new Error(result.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Error during registration:', error);
       // @ts-expect-error ignore
-      toast.show(error.message || 'An error occurred. Please try again.', { type: 'danger', placement: 'top', duration: 3000, animationType: 'slide-in', });
+      toast.show(error.message || 'An error occurred. Please try again.', { type: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -48,9 +72,28 @@ const SignupScreen = () => {
       </View>
 
       <Text style={styles.title}>Easy Fllyer</Text>
-      <TextInput style={styles.input} placeholder="Enter your Postal Code" placeholderTextColor="#999" value={postalCode} onChangeText={setPostalCode}
-        keyboardType="default" keyboardAppearance="light" />
-      <TouchableOpacity onPress={handleSignup} style={[styles.signupButton, loading && styles.disabledButton]} disabled={loading} >
+      
+      <TextInput 
+        style={styles.input} 
+        placeholder="ABC 123" 
+        placeholderTextColor="#999" 
+        value={displayPostalCode} 
+        onChangeText={handlePostalCodeChange}
+        keyboardType="default"
+        autoCapitalize="characters"
+        autoCorrect={false}
+        maxLength={7} // 6 digits + 1 space
+      />
+      
+      <Text style={styles.hintText}>
+        Enter 6-digit alphanumeric code (e.g., ABC123)
+      </Text>
+      
+      <TouchableOpacity 
+        onPress={handleSignup} 
+        style={[styles.signupButton, loading && styles.disabledButton]} 
+        disabled={loading} 
+      >
         {loading ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
@@ -96,9 +139,18 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 10,
     paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 15,
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 10,
     backgroundColor: '#fff',
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 15,
   },
   signupButton: {
     width: '100%',
