@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: "Codemagic Key1"
+      app_store_connect: "Codemagic Key"
     environment:
       node: 20
       xcode: latest
@@ -19,47 +19,72 @@ workflows:
         - ios/Pods
         - vendor/bundle
     scripts:
-      - name: Install dependencies
+      - name: Install Ruby gems
         script: |
           bundle install
+      
+      - name: Install npm dependencies
+        script: |
           npm install
+      
+      - name: Install CocoaPods
+        script: |
           cd ios
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Install Fastlane
-        script: |
-          gem install fastlane -NV
-      
-      - name: Create Fastfile
-        script: |
-          mkdir -p ios/fastlane
-          cat > ios/fastlane/Fastfile << 'EOF'
-          default_platform(:ios)
-          
-          platform :ios do
-            desc "Build and upload to TestFlight"
-            lane :testflight do
-              build_app(
-                workspace: "EasyFlyer.xcworkspace",
-                scheme: "EasyFlyer",
-                export_method: "app-store",
-                skip_build_archive: false,
-                skip_archive: false,
-                clean: true
-              )
-              
-              upload_to_testflight(
-                skip_waiting_for_build_processing: true
-              )
-            end
-          end
-          EOF
-      
-      - name: Build and upload with Fastlane
+      - name: Fetch signing files from App Store Connect
         script: |
           cd ios
-          bundle exec fastlane testflight --verbose
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --platform IOS
+      
+      - name: Set up code signing
+        script: |
+          cd ios
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+      
+      - name: Create export options plist
+        script: |
+          cd ios
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>provisioningProfiles</key>
+            <dict/>
+          </dict>
+          </plist>
+          EOF
+      
+      - name: Build and export
+        script: |
+          cd ios
+          
+          # Build archive
+          xcodebuild archive \
+            -workspace EasyFlyer.xcworkspace \
+            -scheme EasyFlyer \
+            -archivePath EasyFlyer.xcarchive \
+            -allowProvisioningUpdates \
+            -allowProvisioningDeviceRegistration \
+            -destination 'generic/platform=iOS'
+          
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath EasyFlyer.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath . \
+            -allowProvisioningUpdates
     
     artifacts:
       - ios/*.ipa
