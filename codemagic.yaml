@@ -1,6 +1,6 @@
 workflows:
   ios-testflight:
-    name: Build and deploy to TestFlight
+    name: Build and deploy to the TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
@@ -19,73 +19,48 @@ workflows:
         - ios/Pods
         - vendor/bundle
     scripts:
-      - name: Install Ruby gems
+      - name: Install dependencies
         script: |
           gem install bundler
           bundle install || true
-      
-      - name: Install npm dependencies
-        script: |
-          npm ci || npm install
-      
-      - name: Clean and install CocoaPods
-        script: |
+          npm install
           cd ios
-          # Clean previous pods
-          rm -rf Pods
-          rm -rf Podfile.lock
-          rm -rf *.xcworkspace
-          
-          # Reinstall pods
-          bundle exec pod install --repo-update --verbose
+          bundle exec pod install --repo-update
           cd ..
       
-      - name: Verify workspace exists
+      - name: Install Fastlane
         script: |
-          cd ios
-          if [ -d "EasyFlyer.xcworkspace" ]; then
-            echo "✅ Workspace found"
-          else
-            echo "❌ Workspace not found! Pod install may have failed."
-            exit 1
-          fi
-          cd ..
+          gem install fastlane -NV
       
-      - name: Build and export IPA
+      - name: Create Fastfile
         script: |
-          cd ios
+          mkdir -p ios/fastlane
+          cat > ios/fastlane/Fastfile << 'EOF'
+          default_platform(:ios)
           
-          # Build with automatic signing
-          xcodebuild archive \
-            -workspace "EasyFlyer.xcworkspace" \
-            -scheme "EasyFlyer" \
-            -archivePath "EasyFlyer.xcarchive" \
-            -allowProvisioningUpdates \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-          
-          # Create export options
-          cat > exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
+          platform :ios do
+            desc "Build and upload to TestFlight"
+            lane :testflight do
+              build_app(
+                workspace: "EasyFlyer.xcworkspace",
+                scheme: "EasyFlyer",
+                export_method: "app-store",
+                clean: true,
+                skip_archive: false,
+                skip_build_archive: false
+              )
+              
+              upload_to_testflight(
+                skip_waiting_for_build_processing: true
+              )
+            end
+          end
           EOF
-          
-          # Export IPA
-          xcodebuild -exportArchive \
-            -archivePath "EasyFlyer.xcarchive" \
-            -exportOptionsPlist "exportOptions.plist" \
-            -exportPath "." \
-            -allowProvisioningUpdates
+      
+      - name: Build and upload
+        script: |
+          cd ios
+          bundle exec fastlane testflight --verbose
     
     artifacts:
       - ios/*.ipa
