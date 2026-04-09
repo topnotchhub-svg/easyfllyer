@@ -25,26 +25,7 @@ workflows:
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Build and export IPA
-        script: |
-          cd ios
-          
-          # Build archive with automatic signing
-          xcodebuild archive \
-            -workspace "jspromotionalatestversion.xcworkspace" \
-            -scheme "jspromotionalatestversion" \
-            -archivePath "jspromotionalatestversion.xcarchive" \
-            -allowProvisioningUpdates \
-            -allowProvisioningDeviceRegistration
-          
-          # Export IPA
-          xcodebuild -exportArchive \
-            -archivePath "jspromotionalatestversion.xcarchive" \
-            -exportOptionsPlist "exportOptions.plist" \
-            -exportPath "." \
-            -allowProvisioningUpdates
-      
-      - name: Create export options plist
+      - name: Create export options
         script: |
           cd ios
           cat > exportOptions.plist << EOF
@@ -56,14 +37,26 @@ workflows:
             <string>app-store</string>
             <key>signingStyle</key>
             <string>automatic</string>
-            <key>teamID</key>
-            <string>\$(APPLE_TEAM_ID)</string>
           </dict>
           </plist>
           EOF
+      
+      - name: Auto-detect scheme and build
+        script: |
+          cd ios
+          
+          # List available schemes
+          echo "Available schemes:"
+          xcodebuild -list -project "jspromotionalatestversion.xcodeproj"
+          
+          # Build with the correct scheme (should be easy-flyer)
+          xcode-project build-ipa \
+            --project "jspromotionalatestversion.xcodeproj" \
+            --scheme "easy-flyer" \
+            --export-options-plist "exportOptions.plist"
     
     artifacts:
-      - ios/*.ipa
+      - build/ios/ipa/*.ipa
     
     publishing:
       app_store_connect:
