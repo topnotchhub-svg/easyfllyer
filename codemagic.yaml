@@ -1,6 +1,6 @@
 workflows:
   ios-testflight:
-    name: Build and deploy to TestFlight
+    name: Build and deploy to the TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
@@ -17,23 +17,57 @@ workflows:
         - ~/.npm
         - node_modules
         - ios/Pods
+        - vendor/bundle
     scripts:
       - name: Install dependencies
         script: |
           npm install
           cd ios
-          pod install
+          pod install --repo-update
           cd ..
       
-      - name: Build IPA
+      - name: Create export options
         script: |
           cd ios
-          xcode-project build-ipa \
-            --workspace "EasyFlyer.xcworkspace" \
-            --scheme "EasyFlyer"
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+          </dict>
+          </plist>
+          EOF
+      
+      - name: Build archive
+        script: |
+          cd ios
+          xcodebuild archive \
+            -workspace "EasyFlyer.xcworkspace" \
+            -scheme "EasyFlyer" \
+            -archivePath "EasyFlyer.xcarchive" \
+            -allowProvisioningUpdates \
+            -destination 'generic/platform=iOS'
+      
+      - name: Export IPA
+        script: |
+          cd ios
+          xcodebuild -exportArchive \
+            -archivePath "EasyFlyer.xcarchive" \
+            -exportOptionsPlist "exportOptions.plist" \
+            -exportPath "." \
+            -allowProvisioningUpdates
+      
+      - name: Clean up
+        script: |
+          cd ios
+          rm -rf "EasyFlyer.xcarchive"
     
     artifacts:
-      - build/ios/ipa/*.ipa
+      - ios/*.ipa
     
     publishing:
       app_store_connect:
