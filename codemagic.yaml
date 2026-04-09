@@ -10,6 +10,8 @@ workflows:
       xcode: latest
       cocoapods: default
       ruby: default
+      vars:
+        BUNDLE_ID: "com.easyflyer.deals"
     cache:
       cache_paths:
         - ~/.npm
@@ -25,35 +27,12 @@ workflows:
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Create export options
+      - name: Build IPA
         script: |
           cd ios
-          cat > exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
-      
-      - name: Auto-detect scheme and build
-        script: |
-          cd ios
-          
-          # List available schemes
-          echo "Available schemes:"
-          xcodebuild -list -project "jspromotionalatestversion.xcodeproj"
-          
-          # Build with the correct scheme (should be easy-flyer)
           xcode-project build-ipa \
-            --project "jspromotionalatestversion.xcodeproj" \
-            --scheme "easy-flyer" \
-            --export-options-plist "exportOptions.plist"
+            --workspace "EasyFlyer.xcworkspace" \
+            --scheme "EasyFlyer"
     
     artifacts:
       - build/ios/ipa/*.ipa
