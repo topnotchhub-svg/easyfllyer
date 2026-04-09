@@ -27,7 +27,22 @@ workflows:
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Build and deploy to TestFlight
+      - name: Fetch signing files
+        script: |
+          cd ios
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --platform IOS
+      
+      - name: Set up keychain
+        script: |
+          cd ios
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+      
+      - name: Build IPA
         script: |
           cd ios
           xcode-project build-ipa \
