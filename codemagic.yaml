@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: "Codemagic Key2"
+      app_store_connect: "Codemagic Key"
     environment:
       node: 20
       xcode: latest
@@ -27,31 +27,47 @@ workflows:
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Fetch signing files
+      - name: Create export options
         script: |
           cd ios
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create \
-            --platform IOS
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+          </dict>
+          </plist>
+          EOF
       
-      - name: Set up keychain
+      - name: Build archive
         script: |
           cd ios
-          keychain initialize
-          keychain add-certificates
-          xcode-project use-profiles
+          xcodebuild archive \
+            -workspace "EasyFlyer.xcworkspace" \
+            -scheme "EasyFlyer" \
+            -archivePath "EasyFlyer.xcarchive" \
+            -allowProvisioningUpdates
       
-      - name: Build IPA
+      - name: Export IPA
         script: |
           cd ios
-          xcode-project build-ipa \
-            --workspace "EasyFlyer.xcworkspace" \
-            --scheme "EasyFlyer" \
-            --export-method app-store
+          xcodebuild -exportArchive \
+            -archivePath "EasyFlyer.xcarchive" \
+            -exportOptionsPlist "exportOptions.plist" \
+            -exportPath "." \
+            -allowProvisioningUpdates
+      
+      - name: Clean up
+        script: |
+          cd ios
+          rm -rf "EasyFlyer.xcarchive"
     
     artifacts:
-      - build/ios/ipa/*.ipa
+      - ios/*.ipa
     
     publishing:
       app_store_connect:
