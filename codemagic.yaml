@@ -1,6 +1,6 @@
 workflows:
   ios-testflight:
-    name: Build and deploy to the TestFlight
+    name: Build and deploy to TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
@@ -17,53 +17,23 @@ workflows:
         - ~/.npm
         - node_modules
         - ios/Pods
-        - vendor/bundle
     scripts:
       - name: Install dependencies
         script: |
-          gem install bundler
-          bundle install || true
           npm install
           cd ios
-          bundle exec pod install --repo-update
+          pod install
           cd ..
       
-      - name: Install Fastlane
-        script: |
-          gem install fastlane -NV
-      
-      - name: Create Fastfile
-        script: |
-          mkdir -p ios/fastlane
-          cat > ios/fastlane/Fastfile << 'EOF'
-          default_platform(:ios)
-          
-          platform :ios do
-            desc "Build and upload to TestFlight"
-            lane :testflight do
-              build_app(
-                workspace: "EasyFlyer.xcworkspace",
-                scheme: "EasyFlyer",
-                export_method: "app-store",
-                clean: true,
-                skip_archive: false,
-                skip_build_archive: false
-              )
-              
-              upload_to_testflight(
-                skip_waiting_for_build_processing: true
-              )
-            end
-          end
-          EOF
-      
-      - name: Build and upload
+      - name: Build IPA
         script: |
           cd ios
-          bundle exec fastlane testflight --verbose
+          xcode-project build-ipa \
+            --workspace "EasyFlyer.xcworkspace" \
+            --scheme "EasyFlyer"
     
     artifacts:
-      - ios/*.ipa
+      - build/ios/ipa/*.ipa
     
     publishing:
       app_store_connect:
