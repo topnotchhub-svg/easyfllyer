@@ -11,7 +11,7 @@ workflows:
       cocoapods: default
       ruby: default
       vars:
-        XCODE_WORKSPACE: "ios/jspromotionalatestversion.xcworkspace"
+        XCODE_PROJECT: "ios/jspromotionalatestversion.xcodeproj"
         XCODE_SCHEME: "jspromotionalatestversion"
         BUNDLE_ID: "com.easyflyer.deals"
     cache:
@@ -32,17 +32,11 @@ workflows:
           cd ios
           bundle exec pod install --repo-update
           cd ..
-      - name: Set build number
-        script: |
-          BUILD_NUMBER=$(date +%Y%m%d%H%M%S)
-          cd ios
-          agvtool new-version -all $BUILD_NUMBER
-          cd ..
       - name: Build IPA
         script: |
           cd ios
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
