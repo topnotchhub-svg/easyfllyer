@@ -10,6 +10,8 @@ workflows:
       xcode: latest
       cocoapods: default
       ruby: default
+      vars:
+        BUNDLE_ID: "com.easyflyer.deals"
     cache:
       cache_paths:
         - ~/.npm
@@ -22,36 +24,42 @@ workflows:
           bundle install
           npm install
           cd ios
-          bundle exec pod install
+          bundle exec pod install --repo-update
           cd ..
       
-      - name: Build and export
+      - name: Install Fastlane
+        script: |
+          gem install fastlane -NV
+      
+      - name: Create Fastfile
+        script: |
+          mkdir -p ios/fastlane
+          cat > ios/fastlane/Fastfile << 'EOF'
+          default_platform(:ios)
+          
+          platform :ios do
+            desc "Build and upload to TestFlight"
+            lane :testflight do
+              build_app(
+                workspace: "EasyFlyer.xcworkspace",
+                scheme: "EasyFlyer",
+                export_method: "app-store",
+                skip_build_archive: false,
+                skip_archive: false,
+                clean: true
+              )
+              
+              upload_to_testflight(
+                skip_waiting_for_build_processing: true
+              )
+            end
+          end
+          EOF
+      
+      - name: Build and upload with Fastlane
         script: |
           cd ios
-          
-          # Create export options
-          echo '<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>' > exportOptions.plist
-          
-          # Build
-          xcodebuild archive \
-            -workspace EasyFlyer.xcworkspace \
-            -scheme EasyFlyer \
-            -archivePath EasyFlyer.xcarchive \
-            -allowProvisioningUpdates && \
-          xcodebuild -exportArchive \
-            -archivePath EasyFlyer.xcarchive \
-            -exportOptionsPlist exportOptions.plist \
-            -exportPath . \
-            -allowProvisioningUpdates
+          bundle exec fastlane testflight --verbose
     
     artifacts:
       - ios/*.ipa
