@@ -14,13 +14,24 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'easy-flyer' do
+target 'EasyFlyer' do
   config = use_native_modules!
+  
+  # Enable modular headers selectively for Firebase Swift dependencies
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  
+  # Disable new architecture for now to avoid build issues
+  ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    # Enable Hermes debug symbols for better crash reporting
+    :hermes_enabled => true
   )
 
   post_install do |installer|
@@ -31,5 +42,28 @@ target 'easy-flyer' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    # Fix Swift optimization level issues for archive builds
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Set Swift optimization level to -Onone for Debug builds
+        if config.name == 'Debug'
+          config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
+        end
+        # Set Swift optimization level to -O for Release builds
+        if config.name == 'Release'
+          config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-O'
+        end
+      end
+    end
+    
+    # Enable debug symbols for Hermes framework
+    installer.pods_project.targets.each do |target|
+      if target.name == 'hermes-engine'
+        target.build_configurations.each do |config|
+          config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+        end
+      end
+    end
   end
 end
