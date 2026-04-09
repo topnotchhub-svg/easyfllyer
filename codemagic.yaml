@@ -31,15 +31,36 @@ workflows:
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Build IPA for TestFlight
+      - name: Create export options
         script: |
-          # Build directly from repository root (no cd ios)
-          xcode-project build-ipa \
-            --project "ios/jspromotionalatestversion.xcodeproj" \
-            --scheme "jspromotionalatestversion"
+          cat > export_options.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+      
+      - name: Build IPA
+        script: |
+          cd ios
+          xcodebuild archive \
+            -project "jspromotionalatestversion.xcodeproj" \
+            -scheme "jspromotionalatestversion" \
+            -archivePath "jspromotionalatestversion.xcarchive"
+          
+          xcodebuild -exportArchive \
+            -archivePath "jspromotionalatestversion.xcarchive" \
+            -exportPath "." \
+            -exportOptionsPlist "../export_options.plist"
     
     artifacts:
-      - build/ios/ipa/*.ipa
+      - ios/*.ipa
     
     publishing:
       app_store_connect:
