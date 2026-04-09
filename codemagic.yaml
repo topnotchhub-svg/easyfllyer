@@ -10,10 +10,6 @@ workflows:
       xcode: latest
       cocoapods: default
       ruby: default
-      vars:
-        XCODE_PROJECT: "ios/jspromotionalatestversion.xcodeproj"
-        XCODE_SCHEME: "jspromotionalatestversion"
-        BUNDLE_ID: "com.easyflyer.deals"
     cache:
       cache_paths:
         - ~/.npm
@@ -24,22 +20,27 @@ workflows:
       - name: Install Ruby gems
         script: |
           bundle install
+      
       - name: Install npm dependencies
         script: |
           npm install
+      
       - name: Install CocoaPods
         script: |
           cd ios
           bundle exec pod install --repo-update
           cd ..
-      - name: Build IPA
+      
+      - name: Build IPA for TestFlight
         script: |
-          cd ios
+          # Build directly from repository root (no cd ios)
           xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --project "ios/jspromotionalatestversion.xcodeproj" \
+            --scheme "jspromotionalatestversion"
+    
     artifacts:
       - build/ios/ipa/*.ipa
+    
     publishing:
       app_store_connect:
         auth: integration
