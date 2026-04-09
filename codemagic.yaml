@@ -17,47 +17,50 @@ workflows:
         - ios/Pods
         - vendor/bundle
     scripts:
-      - name: Install Ruby gems
+      - name: Install dependencies
         script: |
           bundle install
-      
-      - name: Install npm dependencies
-        script: |
           npm install
-      
-      - name: Install CocoaPods
-        script: |
           cd ios
           bundle exec pod install --repo-update
           cd ..
       
-      - name: Create export options
+      - name: Build and export IPA
         script: |
-          cat > export_options.plist << EOF
+          cd ios
+          
+          # Build archive with automatic signing
+          xcodebuild archive \
+            -workspace "jspromotionalatestversion.xcworkspace" \
+            -scheme "jspromotionalatestversion" \
+            -archivePath "jspromotionalatestversion.xcarchive" \
+            -allowProvisioningUpdates \
+            -allowProvisioningDeviceRegistration
+          
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath "jspromotionalatestversion.xcarchive" \
+            -exportOptionsPlist "exportOptions.plist" \
+            -exportPath "." \
+            -allowProvisioningUpdates
+      
+      - name: Create export options plist
+        script: |
+          cd ios
+          cat > exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
             <string>app-store</string>
-            <key>uploadSymbols</key>
-            <true/>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>\$(APPLE_TEAM_ID)</string>
           </dict>
           </plist>
           EOF
-      
-      - name: Build IPA
-        script: |
-          cd ios
-          xcodebuild archive \
-            -project "jspromotionalatestversion.xcodeproj" \
-            -scheme "jspromotionalatestversion" \
-            -archivePath "jspromotionalatestversion.xcarchive"
-          
-          xcodebuild -exportArchive \
-            -archivePath "jspromotionalatestversion.xcarchive" \
-            -exportPath "." \
-            -exportOptionsPlist "../export_options.plist"
     
     artifacts:
       - ios/*.ipa
