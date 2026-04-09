@@ -19,17 +19,54 @@ workflows:
         - ios/Pods
         - vendor/bundle
     scripts:
-      - name: Install dependencies
+      - name: Install Ruby gems
         script: |
-          bundle install
-          npm install
+          gem install bundler
+          bundle install || true
+      
+      - name: Install npm dependencies
+        script: |
+          npm ci || npm install
+      
+      - name: Clean and install CocoaPods
+        script: |
           cd ios
-          bundle exec pod install --repo-update
+          # Clean previous pods
+          rm -rf Pods
+          rm -rf Podfile.lock
+          rm -rf *.xcworkspace
+          
+          # Reinstall pods
+          bundle exec pod install --repo-update --verbose
           cd ..
       
-      - name: Create export options
+      - name: Verify workspace exists
         script: |
           cd ios
+          if [ -d "EasyFlyer.xcworkspace" ]; then
+            echo "✅ Workspace found"
+          else
+            echo "❌ Workspace not found! Pod install may have failed."
+            exit 1
+          fi
+          cd ..
+      
+      - name: Build and export IPA
+        script: |
+          cd ios
+          
+          # Build with automatic signing
+          xcodebuild archive \
+            -workspace "EasyFlyer.xcworkspace" \
+            -scheme "EasyFlyer" \
+            -archivePath "EasyFlyer.xcarchive" \
+            -allowProvisioningUpdates \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+          
+          # Create export options
           cat > exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -42,29 +79,13 @@ workflows:
           </dict>
           </plist>
           EOF
-      
-      - name: Build archive
-        script: |
-          cd ios
-          xcodebuild archive \
-            -workspace "EasyFlyer.xcworkspace" \
-            -scheme "EasyFlyer" \
-            -archivePath "EasyFlyer.xcarchive" \
-            -allowProvisioningUpdates
-      
-      - name: Export IPA
-        script: |
-          cd ios
+          
+          # Export IPA
           xcodebuild -exportArchive \
             -archivePath "EasyFlyer.xcarchive" \
             -exportOptionsPlist "exportOptions.plist" \
             -exportPath "." \
             -allowProvisioningUpdates
-      
-      - name: Clean up
-        script: |
-          cd ios
-          rm -rf "EasyFlyer.xcarchive"
     
     artifacts:
       - ios/*.ipa
