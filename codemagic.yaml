@@ -9,23 +9,35 @@ workflows:
       node: 20
       xcode: 16.2
       cocoapods: default
+    cache:
+      cache_paths:
+        - ~/.npm
+        - node_modules
+        - ios/Pods
     scripts:
       - name: Install dependencies
         script: |
           npm install
-          cd ios && pod install && cd ..
-      
-      - name: Build IPA
+          cd ios
+          pod install --repo-update
+          cd ..
+      - name: Build and export
         script: |
           cd ios
-          xcode-project build-ipa \
-            --workspace "EasyFlyer.xcworkspace" \
-            --scheme "EasyFlyer" \
-            --export-method app-store
-    
+          xcodebuild archive \
+            -workspace EasyFlyer.xcworkspace \
+            -scheme EasyFlyer \
+            -archivePath EasyFlyer.xcarchive \
+            -allowProvisioningUpdates \
+            -destination 'generic/platform=iOS'
+          xcodebuild -exportArchive \
+            -archivePath EasyFlyer.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath . \
+            -allowProvisioningUpdates
+          rm -rf EasyFlyer.xcarchive
     artifacts:
-      - build/ios/ipa/*.ipa
-    
+      - ios/*.ipa
     publishing:
       app_store_connect:
         auth: integration
