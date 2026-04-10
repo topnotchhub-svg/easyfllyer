@@ -10,53 +10,46 @@ workflows:
       xcode: 16.2
       cocoapods: default
       ruby: default
+      vars:
+        BUNDLE_ID: "com.easyflyer.deals"
+    cache:
+      cache_paths:
+        - ~/.npm
+        - node_modules
+        - ios/Pods
+        - vendor/bundle
     scripts:
-      - name: Install dependencies
+      - name: Install npm dependencies
         script: |
           npm install
-          
+      
+      - name: Install CocoaPods
+        script: |
           cd ios
-          # Force reinstallation of pods
-          sudo gem install cocoapods
-          pod deintegrate || true
-          pod cache clean --all
           pod install --repo-update
           cd ..
       
-      - name: Build with xcodebuild directly (bypassing workspace issues)
+      - name: Build and export IPA
         script: |
           cd ios
           
-          # Use xcodebuild directly with the project
-          xcodebuild clean build archive \
-            -project "EasyFlyer.xcodeproj" \
+          # Build archive
+          xcodebuild archive \
+            -workspace "EasyFlyer.xcworkspace" \
             -scheme "EasyFlyer" \
             -archivePath "EasyFlyer.xcarchive" \
             -allowProvisioningUpdates \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
-          
-          # Create export options
-          cat > exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
+            -destination 'generic/platform=iOS'
           
           # Export IPA
           xcodebuild -exportArchive \
             -archivePath "EasyFlyer.xcarchive" \
-            -exportOptionsPlist "exportOptions.plist" \
+            -exportOptionsPlist "ExportOptions.plist" \
             -exportPath "." \
             -allowProvisioningUpdates
+          
+          # Clean up
+          rm -rf "EasyFlyer.xcarchive"
     
     artifacts:
       - ios/*.ipa
