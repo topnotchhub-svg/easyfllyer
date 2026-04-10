@@ -12,6 +12,7 @@ workflows:
       ruby: default
       vars:
         BUNDLE_ID: "com.easyflyer.deals"
+        TEAM_ID: "QJW53673RX"  # <--- REPLACE WITH YOUR ACTUAL TEAM ID
     cache:
       cache_paths:
         - ~/.npm
@@ -29,27 +30,41 @@ workflows:
           pod install --repo-update
           cd ..
       
-      - name: Build and export IPA
+      - name: Fetch signing files
         script: |
           cd ios
-          
-          # Build archive
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --platform IOS \
+            --team-id "$TEAM_ID"
+      
+      - name: Set up keychain
+        script: |
+          keychain initialize
+          keychain add-certificates
+      
+      - name: Build archive
+        script: |
+          cd ios
           xcodebuild archive \
             -workspace "EasyFlyer.xcworkspace" \
             -scheme "EasyFlyer" \
             -archivePath "EasyFlyer.xcarchive" \
             -allowProvisioningUpdates \
-            -destination 'generic/platform=iOS'
-          
-          # Export IPA
+            -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+      
+      - name: Export IPA
+        script: |
+          cd ios
           xcodebuild -exportArchive \
             -archivePath "EasyFlyer.xcarchive" \
             -exportOptionsPlist "ExportOptions.plist" \
             -exportPath "." \
-            -allowProvisioningUpdates
-          
-          # Clean up
-          rm -rf "EasyFlyer.xcarchive"
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="$TEAM_ID"
     
     artifacts:
       - ios/*.ipa
